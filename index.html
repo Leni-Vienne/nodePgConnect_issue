@@ -1,0 +1,42 @@
+<html>
+
+<head>
+    <title>Home</title>
+</head>
+
+<body style="text-align: center;" onload="login();loadSessionTable();">
+    <h1>Home</h1>
+    <p id="connected">not connected :(</p>
+    <input type="text" id="username" placeholder="username">
+    <button onclick="login()">login</button>
+    <h4>session table :</h4><br>
+    <pre>empty</pre>
+    <script>
+        async function amIloggedIn() {
+            const respone = await fetch('http://localhost:3000/am_i_logged_in')
+            const data = await respone.json()
+            if (data.success) {
+                document.getElementById('connected').innerText = 'user session is already stored :)'
+            }
+        }
+        async function login() {
+            const respone = await fetch('http://localhost:3000/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username: document.getElementById('username').value }),
+            })
+            const data = await respone.json()
+            if (data.success) {
+                document.getElementById('connected').innerText = 'connected :)'
+            }
+        }
+        async function loadSessionTable() {
+            const respone = await fetch('http://localhost:3000/session_table')
+            const data = await respone.json()
+            document.querySelector('pre').innerText = JSON.stringify(data, null, 2)
+        }
+    </script>
+</body>
+</html>

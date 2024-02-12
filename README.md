@@ -1,0 +1,1 @@
+`docker compose up` to run it, localhost:3000 to test

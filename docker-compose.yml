@@ -1,0 +1,23 @@
+services:
+  database:
+    build:
+      context: .
+      dockerfile: Dockerfile.db
+    env_file: 
+      - .env
+    volumes:
+       - db:/data/db
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+  app:
+    build: .
+    env_file: 
+      - .env
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    depends_on:
+      - database
+volumes:
+  db:

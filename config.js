@@ -6,7 +6,7 @@ config.postgres = {
     database: process.env.POSTGRES_DATABASE,
     user: process.env.POSTGRES_USER,
     password: process.env.POSTGRES_PASSWORD,
-    ssl: process.env.POSTGRES_SSL, //sinon tente de ce connecter sur l'adresse locale
+    ssl: process.env.POSTGRES_SSL,
 }
 
 module.exports = config
