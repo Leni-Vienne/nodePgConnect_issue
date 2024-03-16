@@ -19,14 +19,15 @@ const store = new pgSession({
 })
 
 app.use(expressSession({
-    store: store,
+    //store: store,
     secret: process.env.COOKIE,
     resave: true,
     saveUninitialized: false,
-    secure: false,
     unset: 'destroy',
+    secure: false,
     cookie: {
         maxAge: 60 * 60 * 1000,
+        secure: false,
     },
 }));
 
@@ -77,11 +78,14 @@ app.get('/session_table', async (req, res) => {
 });
 
 async function createSession(req) {
-    req.session.regenerate(function (err) {
-        if (err) throw (err)
-        req.session.username = req.body.username + Date.now()
-        req.session.save(function (err) {
-            if (err) throw (err)
+    new Promise((resolve, reject) => {
+        req.session.regenerate(function (err) {
+            if (err) reject(err)
+            req.session.username = req.body.username + Date.now()
+            req.session.save(function (err) {
+                if (err) reject(err)
+                resolve()
+            })
         })
     })
 }
