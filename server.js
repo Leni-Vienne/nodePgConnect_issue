@@ -3,7 +3,15 @@ const express = require('express');
 const path = require('path');
 const expressSession = require('express-session');
 const pgSession = require('connect-pg-simple')(expressSession);
-const pool = require('./db.js');
+const pgCon = require('pg')
+
+const pool = new pgCon.Pool({
+    host: process.env.POSTGRES_HOST,
+    port: process.env.POSTGRES_PORT,
+    database: process.env.POSTGRES_DB,
+    user: process.env.POSTGRES_USER,
+    password: process.env.POSTGRES_PASSWORD,
+})
 
 const app = express();
 
@@ -19,7 +27,7 @@ const store = new pgSession({
 })
 
 app.use(expressSession({
-    //store: store,
+    store: store, // comment to use the in-memory store
     secret: process.env.COOKIE,
     resave: true,
     saveUninitialized: false,
@@ -27,39 +35,27 @@ app.use(expressSession({
     secure: false,
     cookie: {
         maxAge: 60 * 60 * 1000,
-        secure: false,
     },
 }));
 
-app.get('/', function (req, res) {
+app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '/index.html'));
 });
 
-app.get('/am_i_logged_in', function (req, res) {
-    if (req.session.username) {
-        console.log("user session already stored :)")
-        res.status(200).send({ success: "user session already stored :)" })
-    }
-    else {
-        console.log("user session not stored or empty")
-        res.status(200).send({ error: "user session not stored or empty" })
-    }
-});
-
-app.post('/login', async (req, res) => {
+app.post('/login', (req, res) => {
     try {
         if (req.session.username) {
             console.log("user session already stored :)")
-            return res.send("user session already stored :)")
+            return res.status(200).send({ success: "user session was already stored :)" })
         }
-        else if(req.body.username !== ""){
-            console.log("user session '", req.body.username, "' not stored or empty, making a new one")
-            await createSession(req)
-            res.status(200).send({ success: "user wasn't logged in, but now he is" })
+        else if (req.body.username) {
+            req.session.username = req.body.username + Date.now()
+            console.log("user session now stored :)")
+            return res.status(200).send({ success: "a new session was created" })
         }
-        else{
-            console.log("no username was provided, not making a new session")
-            res.status(200).send({ error: "no username was provided" })
+        else {
+            console.log("user session not stored or empty")
+            return res.status(200).send({ error: "user session not stored or empty" })
         }
     } catch (error) {
         console.error(`/login : ${error}`)
@@ -76,16 +72,3 @@ app.get('/session_table', async (req, res) => {
         res.json({ error: 'error retrieving session table' })
     }
 });
-
-async function createSession(req) {
-    new Promise((resolve, reject) => {
-        req.session.regenerate(function (err) {
-            if (err) reject(err)
-            req.session.username = req.body.username + Date.now()
-            req.session.save(function (err) {
-                if (err) reject(err)
-                resolve()
-            })
-        })
-    })
-}
